@@ -5,7 +5,7 @@
  * Composes: IntentWizardShell, WizardStep, EntitySelectStep, ChoiceGroup, StepNav, SummaryStep, SuccessStep,
  *           Field, Bound, BudgetTracker.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { IntentWizardShell, WizardStep } from '@/components/blocks/IntentWizardShell';
 import { EntitySelectStep } from '@/components/blocks/EntitySelectStep';
 import { StepNav } from '@/components/blocks/StepNav';
@@ -14,7 +14,7 @@ import { SuccessStep } from '@/components/blocks/SuccessStep';
 import { Field } from '@/components/blocks/Field';
 import { Bound } from '@/components/blocks/Bound';
 import { BudgetTracker } from '@/components/blocks/BudgetTracker';
-import { useRecordSearch, useStepForm, useJourneySubmit, fieldNumber, fieldLookup, todayIso, optionsOf } from '@/lib/journey';
+import { useRecordSearch, useStepForm, useJourneySubmit, fieldNumber, fieldLookup, fieldRef, combineFilters, refFilter, todayIso, optionsOf } from '@/lib/journey';
 import { servicePort } from '@/services/journeyPort';
 import { tx } from '@/i18n';
 import { Input } from '@/components/ui/input';
@@ -52,6 +52,7 @@ function mwstLabel(key: string): string {
 
 export default function NeuerAuftragPage() {
   const [step, setStep] = useState(1);
+  const [selectedKundeId, setSelectedKundeId] = useState<string | null>(null);
 
   // Step 1: Kunde wählen
   const kunden = useRecordSearch(servicePort, 'kunden', {
@@ -95,6 +96,10 @@ export default function NeuerAuftragPage() {
     },
   });
 
+  // Kreditlimit-Prüfung
+  const [kreditlimitData, setKreditlimitData] = useState<{ kreditlimit: number; offeneForderungen: number } | null>(null);
+  const [kreditlimitLoading, setKreditlimitLoading] = useState(false);
+
   // Positionen list (managed locally, then written in the plan)
   const [positionen, setPositionen] = useState<Position[]>([]);
 
@@ -109,9 +114,75 @@ export default function NeuerAuftragPage() {
     mehrwertsteuersatz: string;
   } | null>(null);
 
+  // Auto-Auftragsnummer: nächste freie im Format AUF-YYYY-NNN
+  useEffect(() => {
+    let cancelled = false;
+    const year = new Date().getFullYear();
+    const prefix = `AUF-${year}-`;
+    servicePort.list('auftraege').then(records => {
+      if (cancelled || auftrag.get('auftragsnummer')) return;
+      let maxNum = 0;
+      for (const r of records) {
+        const nr = String(r.fields.auftragsnummer ?? '');
+        if (nr.startsWith(prefix)) {
+          const n = parseInt(nr.slice(prefix.length), 10);
+          if (!isNaN(n) && n > maxNum) maxNum = n;
+        }
+      }
+      auftrag.set('auftragsnummer', `${prefix}${String(maxNum + 1).padStart(3, '0')}`);
+    });
+    return () => { cancelled = true; };
+  }, []); // Nur beim Mount — Draft-Wert hat Vorrang (check oben)
+
+  // Kreditlimit-Prüfung beim Erreichen von Schritt 4
+  useEffect(() => {
+    if (step !== 4 || !selectedKundeId) {
+      setKreditlimitData(null);
+      setKreditlimitLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setKreditlimitLoading(true);
+    setKreditlimitData(null);
+    (async () => {
+      try {
+        const kundeRec = await servicePort.get('kunden', selectedKundeId);
+        const limit = kundeRec ? fieldNumber(kundeRec, 'kreditlimit') : null;
+        if (limit == null) { if (!cancelled) setKreditlimitLoading(false); return; }
+        const [kundeAuftraege, alleRechnungen, alleZahlungen] = await Promise.all([
+          servicePort.list('auftraege', { filter: combineFilters(refFilter('kunde', selectedKundeId)) }),
+          servicePort.list('rechnungen'),
+          servicePort.list('zahlungseingaenge'),
+        ]);
+        const auftraegeIds = new Set(kundeAuftraege.map(a => a.id));
+        const offeneR = alleRechnungen.filter(r => {
+          const aid = fieldRef(r, 'auftrag');
+          if (!aid || !auftraegeIds.has(aid)) return false;
+          const s = fieldLookup(r, 'status')?.key;
+          return s === 'offen' || s === 'ueberfaellig';
+        });
+        const zahlMap = new Map<string, number>();
+        for (const z of alleZahlungen) {
+          const rId = fieldRef(z, 'rechnung');
+          if (rId) zahlMap.set(rId, (zahlMap.get(rId) ?? 0) + (fieldNumber(z, 'zahlungsbetrag') ?? 0));
+        }
+        const offeneForderungen = offeneR.reduce((s, r) =>
+          s + Math.max(0, (fieldNumber(r, 'bruttobetrag') ?? 0) - (zahlMap.get(r.id) ?? 0)), 0);
+        if (!cancelled) {
+          setKreditlimitData({ kreditlimit: limit, offeneForderungen });
+          setKreditlimitLoading(false);
+        }
+      } catch { if (!cancelled) setKreditlimitLoading(false); }
+    })();
+    return () => { cancelled = true; };
+  }, [step, selectedKundeId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const netto = calcNetto(positionen);
   const mwst = calcMwst(positionen);
   const brutto = netto + mwst;
+
+  const kreditlimitUeberschritten = kreditlimitData !== null &&
+    (kreditlimitData.offeneForderungen + round2(brutto)) > kreditlimitData.kreditlimit;
 
   // The plan: CREATE auftraege, then one step per position
   const submit = useJourneySubmit(servicePort, [
@@ -121,11 +192,20 @@ export default function NeuerAuftragPage() {
       form: auftrag,
       primary: true,
       values: (ctx) => {
-        void ctx; // ctx not needed here but required by signature shape
+        void ctx;
+        const extraFields: Record<string, unknown> = {};
+        if (kreditlimitData && (kreditlimitData.offeneForderungen + round2(brutto)) > kreditlimitData.kreditlimit) {
+          extraFields.status = 'entwurf';
+          const ueberschreitung = round2(kreditlimitData.offeneForderungen + brutto - kreditlimitData.kreditlimit);
+          const note = tx`[Kreditlimit: Limit ${formatCurrency(kreditlimitData.kreditlimit)}, offen ${formatCurrency(kreditlimitData.offeneForderungen)}, Auftrag ${formatCurrency(round2(brutto))}, Überschreitung ${formatCurrency(ueberschreitung)}]`;
+          const bestehendeBemerkung = (auftrag.get('bemerkung') as string | null) ?? '';
+          extraFields.bemerkung = bestehendeBemerkung ? `${bestehendeBemerkung}\n${note}` : note;
+        }
         return {
           nettobetrag: round2(netto),
           mehrwertsteuerbetrag: round2(mwst),
           bruttobetrag: round2(brutto),
+          ...extraFields,
         };
       },
     },
@@ -229,6 +309,8 @@ export default function NeuerAuftragPage() {
           selectedId={auftrag.get('kunde') as string | undefined}
           onSelect={id => {
             auftrag.set('kunde', id, kunden.labelOf(id));
+            setSelectedKundeId(id);
+            setKreditlimitData(null);
             setStep(2);
           }}
           searchPlaceholder={tx('Firmenname oder Ansprechpartner')}
@@ -243,7 +325,7 @@ export default function NeuerAuftragPage() {
       >
         <div className="space-y-4">
           <Field form={auftrag} name="auftragsnummer">
-            <Input {...auftrag.field('auftragsnummer')} placeholder={tx('z. B. AU-2026-001')} />
+            <Input {...auftrag.field('auftragsnummer')} placeholder={tx('z. B. AUF-2026-001')} />
           </Field>
           <Bound form={auftrag} name="auftragsdatum" />
           <Bound form={auftrag} name="lieferdatum" label={tx('Gewünschtes Lieferdatum')} />
@@ -426,13 +508,39 @@ export default function NeuerAuftragPage() {
       {/* Step 4: Zusammenfassung */}
       <WizardStep label={tx('Prüfen')}>
         {!submit.done && (
-          <SummaryStep
-            forms={[auftrag]}
-            submit={submit}
-            items={summaryItems}
-            whatHappensNext={tx('Der Auftrag wird mit allen Positionen angelegt und erscheint sofort in der Auftragsliste.')}
-            confirmLabel={tx('Auftrag anlegen')}
-          />
+          <>
+            {kreditlimitLoading && (
+              <p className="text-sm text-muted-foreground mb-4">{tx('Kreditlimit wird geprüft …')}</p>
+            )}
+            {kreditlimitUeberschritten && (
+              <div className="rounded-lg border border-destructive bg-destructive/10 p-4 mb-4 space-y-3">
+                <p className="font-semibold text-destructive">
+                  {tx('Kreditlimit überschritten — Auftrag wird als Entwurf angelegt')}
+                </p>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+                  <span className="text-muted-foreground">{tx('Kreditlimit')}</span>
+                  <span>{formatCurrency(kreditlimitData!.kreditlimit)}</span>
+                  <span className="text-muted-foreground">{tx('Bereits offen')}</span>
+                  <span>{formatCurrency(kreditlimitData!.offeneForderungen)}</span>
+                  <span className="text-muted-foreground">{tx('Dieser Auftrag')}</span>
+                  <span>{formatCurrency(round2(brutto))}</span>
+                  <span className="text-muted-foreground font-medium">{tx('Überschreitung')}</span>
+                  <span className="font-semibold text-destructive">
+                    {formatCurrency(round2(kreditlimitData!.offeneForderungen + brutto - kreditlimitData!.kreditlimit))}
+                  </span>
+                </div>
+              </div>
+            )}
+            <SummaryStep
+              forms={[auftrag]}
+              submit={submit}
+              items={summaryItems}
+              whatHappensNext={kreditlimitUeberschritten
+                ? tx('Der Auftrag wird wegen Kreditlimitüberschreitung als Entwurf angelegt.')
+                : tx('Der Auftrag wird mit allen Positionen angelegt und erscheint sofort in der Auftragsliste.')}
+              confirmLabel={kreditlimitUeberschritten ? tx('Als Entwurf anlegen') : tx('Auftrag anlegen')}
+            />
+          </>
         )}
       </WizardStep>
 

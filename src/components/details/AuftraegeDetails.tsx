@@ -11,14 +11,21 @@ import { SatelliteSection } from '@/components/SatelliteSection';
 function parseBemerkung(raw: string | null | undefined): {
   displayText: string;
   statuswechselHints: Array<{ date: string | null }>;
+  kreditlimitHints: string[];
 } {
-  if (!raw) return { displayText: '', statuswechselHints: [] };
+  if (!raw) return { displayText: '', statuswechselHints: [], kreditlimitHints: [] };
   const displayLines: string[] = [];
   const statuswechselHints: Array<{ date: string | null }> = [];
+  const kreditlimitHints: string[] = [];
   for (const line of raw.split('\n')) {
     const t = line.trim();
     // [Systemstatus: ...] — vollständig ausblenden
     if (/^\[Systemstatus:/i.test(t)) continue;
+    // [Kreditlimit: ...] — als rote Warnung extrahieren
+    if (/^\[Kreditlimit:/i.test(t)) {
+      kreditlimitHints.push(t.replace(/^\[Kreditlimit:\s*/i, '').replace(/\]$/, ''));
+      continue;
+    }
     // "Statuswechsel von ... war nicht erlaubt" — als Hinweis extrahieren
     if (/statuswechsel.*war nicht erlaubt/i.test(t)) {
       const dateMatch = t.match(/(\d{2}\.\d{2}\.\d{4})/);
@@ -30,6 +37,7 @@ function parseBemerkung(raw: string | null | undefined): {
   return {
     displayText: displayLines.join('\n').trim(),
     statuswechselHints,
+    kreditlimitHints,
   };
 }
 
@@ -75,7 +83,7 @@ export function AuftraegeDetails({
   onAddRechnungen,
 }: AuftraegeDetailsProps) {
   const kundeTarget = kundenList.find(r => r.record_id === extractRecordId(record.fields.kunde));
-  const { displayText: bemerkungText, statuswechselHints } = parseBemerkung(record.fields.bemerkung as string);
+  const { displayText: bemerkungText, statuswechselHints, kreditlimitHints } = parseBemerkung(record.fields.bemerkung as string);
   return (
     <>
       <RecordSection title={t('details')} cols={2}>
@@ -86,6 +94,15 @@ export function AuftraegeDetails({
         <RecordField label={fieldLabel('auftraege', 'nettobetrag')} value={record.fields.nettobetrag} format="text" />
         <RecordField label={fieldLabel('auftraege', 'mehrwertsteuerbetrag')} value={record.fields.mehrwertsteuerbetrag} format="text" />
         <RecordField label={fieldLabel('auftraege', 'bruttobetrag')} value={record.fields.bruttobetrag} format="text" />
+        {kreditlimitHints.length > 0 && (
+          <div className="md:col-span-2 space-y-1">
+            {kreditlimitHints.map((hint, i) => (
+              <p key={i} className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-2.5 py-1.5 font-medium">
+                {tx('Kreditlimit überschritten')} — {hint}
+              </p>
+            ))}
+          </div>
+        )}
         <RecordField label={fieldLabel('auftraege', 'bemerkung')} value={bemerkungText || null} format="longtext" className="md:col-span-2" />
         {statuswechselHints.length > 0 && (
           <div className="md:col-span-2 space-y-1">
