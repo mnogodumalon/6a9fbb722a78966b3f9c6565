@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "flows": [],
+  "unregistered_pages": [
+    {
+      "file": "src/pages/intents/NeuerAuftragPage.tsx",
+      "summary": "/**\n * Neuer Auftrag — 4-Schritt-Wizard.\n * Steps: 1) Kunde wählen → 2) Auftragsdetails → 3) Positionen hinzufügen → 4) Prüfen & anlegen.\n * Reads: kunden, artikel. Writes: auftraege (createAuftraegeEntry), auftragspositionen (createAuftragspositionenEntry).\n * Composes: IntentWizardShell, WizardStep, EntitySelectStep, ChoiceGroup, StepNav, SummaryStep, SuccessStep,\n *           Field, Bound, BudgetTracker.\n */",
+      "components": [
+        "Bound",
+        "BudgetTracker",
+        "Button",
+        "ChoiceGroup",
+        "EntitySelectStep",
+        "Field",
+        "Input",
+        "IntentWizardShell",
+        "StepNav",
+        "SuccessStep",
+        "SummaryStep",
+        "WizardStep"
+      ],
+      "writes": []
+    },
+    {
+      "file": "src/pages/intents/WareneingangBuchenPage.tsx",
+      "summary": "/**\n * Wareneingang buchen — 4-Schritt-Wizard.\n * Steps: 1) Bestellung wählen → 2) Positionen erfassen → 3) Zusammenfassung → 4) Erfolg.\n * Reads: lieferantenbestellungen (offen/bestellt), bestellpositionen, artikel (via refs).\n * Writes: lagerbewegungen (N × wareneingang), lieferantenbestellungen (status → eingegangen).\n * Composes: IntentWizardShell, WizardStep, EntitySelectStep, StepNav, SummaryStep, SuccessStep.\n */",
+      "components": [
+        "DatePicker",
+        "EntitySelectStep",
+        "Field",
+        "Input",
+        "IntentWizardShell",
+        "StatusBadge",
+        "StepNav",
+        "SuccessStep",
+        "SummaryStep",
+        "WizardStep"
+      ],
+      "writes": []
+    }
+  ]
+}

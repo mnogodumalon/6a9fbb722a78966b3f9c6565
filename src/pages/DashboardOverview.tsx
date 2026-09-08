@@ -3,7 +3,7 @@ import type { DashboardData } from '@/hooks/useDashboardData';
 import { useEntityCrud } from '@/components/EntityCrud';
 import { tx, appLabel } from '@/i18n';
 import { LOOKUP_OPTIONS, lookupOption, APP_IDS } from '@/types/app';
-import { LivingAppsService, createRecordUrl } from '@/services/livingAppsService';
+import { LivingAppsService, createRecordUrl, extractRecordId } from '@/services/livingAppsService';
 import { formatDate, formatCurrency, lookupKey } from '@/lib/formatters';
 import { useClock, gruss, namen, undoToast } from '@/lib/polish';
 import { DashboardGrid } from '@/components/DashboardGrid';
@@ -17,9 +17,14 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import type { EnrichedAuftraege, EnrichedRechnungen } from '@/types/enriched';
 
+// Reihenfolge der Auftragsstatus für Vorwärts-Validierung
+const STATUS_ORDER: Record<string, number> = {
+  entwurf: 0, freigegeben: 1, geliefert: 2, abgerechnet: 3,
+};
+
 export default function DashboardOverview({ data }: { data: DashboardData }) {
   const {
-    auftraege, artikel, rechnungen, fetchAll,
+    auftraege, artikel, rechnungen, zahlungseingaenge, fetchAll,
     setAuftraege, setRechnungen,
   } = data;
 
@@ -93,9 +98,23 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
     [enrichedRechnungen],
   );
 
+  // Bereits erfasste Zahlungen pro Rechnung
+  const zahlungenProRechnung = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const z of zahlungseingaenge) {
+      const rId = extractRecordId(z.fields.rechnung);
+      if (rId) m.set(rId, (m.get(rId) ?? 0) + (z.fields.zahlungsbetrag ?? 0));
+    }
+    return m;
+  }, [zahlungseingaenge]);
+
+  // Offene Forderungen = Brutto minus bereits gebuchte Zahlungseingänge
   const offeneRechnungenSumme = useMemo(
-    () => offeneRechnungen.reduce((sum, r) => sum + (r.fields.bruttobetrag ?? 0), 0),
-    [offeneRechnungen],
+    () => offeneRechnungen.reduce((sum, r) => {
+      const paid = zahlungenProRechnung.get(r.record_id) ?? 0;
+      return sum + Math.max(0, (r.fields.bruttobetrag ?? 0) - paid);
+    }, 0),
+    [offeneRechnungen, zahlungenProRechnung],
   );
 
   // Aufträge freigegeben (zur Lieferung bereit)
@@ -144,6 +163,10 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
   };
 
   const markRechnungBezahlt = async (rechnung: EnrichedRechnungen) => {
+    // Offener Restbetrag = Brutto minus bereits gebuchte Zahlungen
+    const paid = zahlungenProRechnung.get(rechnung.record_id) ?? 0;
+    const restbetrag = Math.max(0, (rechnung.fields.bruttobetrag ?? 0) - paid);
+
     const prev = rechnung.fields.status;
     const optimistic = rechnungen.map(r =>
       r.record_id === rechnung.record_id
@@ -162,6 +185,15 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
       await LivingAppsService.updateRechnungenEntry(rechnung.record_id, { status: lookupKey(prev) });
     });
     try {
+      // Zahlungseingang über den offenen Restbetrag anlegen
+      if (restbetrag > 0) {
+        await LivingAppsService.createZahlungseingaengeEntry({
+          rechnung: createRecordUrl(APP_IDS.RECHNUNGEN, rechnung.record_id),
+          zahlungsbetrag: restbetrag,
+          zahlungsdatum: format(clock, 'yyyy-MM-dd'),
+          zahlungsart: 'ueberweisung',
+        });
+      }
       await LivingAppsService.updateRechnungenEntry(rechnung.record_id, { status: 'bezahlt' });
     } catch {
       await fetchAll();
@@ -199,11 +231,24 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
     [enrichedAuftraege, COLUMNS],
   );
 
-  const moveCard = async (cardId: string, newColumn: string) => {
+  const moveCard = async (cardId: string, newColumn: string): Promise<string | void> => {
     const rid = cardId.split(':')[1];
     if (!rid) return;
     const auftrag = auftraege.find(a => a.record_id === rid);
     if (!auftrag) return;
+
+    // Vorwärts-Regel: nur in Richtung der definierten Reihenfolge
+    const fromStatus = lookupKey(auftrag.fields.status) ?? '';
+    const fromOrder = STATUS_ORDER[fromStatus] ?? -1;
+    const toOrder = STATUS_ORDER[newColumn] ?? -1;
+    if (newColumn === 'storniert') {
+      if (fromStatus !== 'entwurf' && fromStatus !== 'freigegeben') {
+        return tx('Stornieren ist nur aus Entwurf oder Freigegeben möglich.');
+      }
+    } else if (toOrder !== -1 && fromOrder !== -1 && toOrder <= fromOrder) {
+      return tx('Aufträge können nur vorwärts verschoben werden.');
+    }
+
     const prev = auftrag.fields.status;
     setAuftraege(prev2 =>
       prev2.map(a =>
@@ -230,10 +275,13 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
     }
   };
 
-  // --- ChartWidget rows: Umsatz pro Monat ---
+  // --- ChartWidget rows: Umsatz pro Monat — nur Freigegeben/Geliefert/Abgerechnet ---
   const chartRows = useMemo<ChartRow<EnrichedAuftraege>[]>(
     () => enrichedAuftraege
-      .filter(a => lookupKey(a.fields.status) !== 'storniert')
+      .filter(a => {
+        const s = lookupKey(a.fields.status);
+        return s === 'freigegeben' || s === 'geliefert' || s === 'abgerechnet';
+      })
       .map(a => ({ id: `auftrag:${a.record_id}`, data: a })),
     [enrichedAuftraege],
   );
