@@ -4,8 +4,34 @@ import { extractRecordId } from '@/services/livingAppsService';
 import {
   RecordSection, RecordField, RecordRelation, RecordAttachments,
 } from '@/components/widgets/RecordView';
-import { t, appLabel, fieldLabel } from '@/i18n';
+import { t, tx, appLabel, fieldLabel } from '@/i18n';
 import { SatelliteSection } from '@/components/SatelliteSection';
+
+/** Trennt die Bemerkung in anzuzeigenden Text und System-Vermerke. */
+function parseBemerkung(raw: string | null | undefined): {
+  displayText: string;
+  statuswechselHints: Array<{ date: string | null }>;
+} {
+  if (!raw) return { displayText: '', statuswechselHints: [] };
+  const displayLines: string[] = [];
+  const statuswechselHints: Array<{ date: string | null }> = [];
+  for (const line of raw.split('\n')) {
+    const t = line.trim();
+    // [Systemstatus: ...] — vollständig ausblenden
+    if (/^\[Systemstatus:/i.test(t)) continue;
+    // "Statuswechsel von ... war nicht erlaubt" — als Hinweis extrahieren
+    if (/statuswechsel.*war nicht erlaubt/i.test(t)) {
+      const dateMatch = t.match(/(\d{2}\.\d{2}\.\d{4})/);
+      statuswechselHints.push({ date: dateMatch ? dateMatch[1] : null });
+      continue;
+    }
+    displayLines.push(line);
+  }
+  return {
+    displayText: displayLines.join('\n').trim(),
+    statuswechselHints,
+  };
+}
 
 export interface AuftraegeDetailsProps {
   /** Der Record — enriched oder roh; alle Felder werden hier gerendert. */
@@ -49,6 +75,7 @@ export function AuftraegeDetails({
   onAddRechnungen,
 }: AuftraegeDetailsProps) {
   const kundeTarget = kundenList.find(r => r.record_id === extractRecordId(record.fields.kunde));
+  const { displayText: bemerkungText, statuswechselHints } = parseBemerkung(record.fields.bemerkung as string);
   return (
     <>
       <RecordSection title={t('details')} cols={2}>
@@ -59,7 +86,18 @@ export function AuftraegeDetails({
         <RecordField label={fieldLabel('auftraege', 'nettobetrag')} value={record.fields.nettobetrag} format="text" />
         <RecordField label={fieldLabel('auftraege', 'mehrwertsteuerbetrag')} value={record.fields.mehrwertsteuerbetrag} format="text" />
         <RecordField label={fieldLabel('auftraege', 'bruttobetrag')} value={record.fields.bruttobetrag} format="text" />
-        <RecordField label={fieldLabel('auftraege', 'bemerkung')} value={record.fields.bemerkung} format="longtext" className="md:col-span-2" />
+        <RecordField label={fieldLabel('auftraege', 'bemerkung')} value={bemerkungText || null} format="longtext" className="md:col-span-2" />
+        {statuswechselHints.length > 0 && (
+          <div className="md:col-span-2 space-y-1">
+            {statuswechselHints.map((hint, i) => (
+              <p key={i} className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2.5 py-1.5">
+                {hint.date
+                  ? tx`Am ${hint.date} wurde ein nicht erlaubter Statuswechsel zurückgesetzt.`
+                  : tx('Ein nicht erlaubter Statuswechsel wurde zurückgesetzt.')}
+              </p>
+            ))}
+          </div>
+        )}
       </RecordSection>
 
       {/* N:1 — verknüpfte Records: IMMER klickbar, nie eine Text-Sackgasse. */}

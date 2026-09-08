@@ -33,6 +33,8 @@ interface Position {
   mehrwertsteuersatz: string; // 'mwst_7' | 'mwst_19'
 }
 
+const round2 = (n: number): number => Math.round(n * 100) / 100;
+
 function calcNetto(positionen: Position[]): number {
   return positionen.reduce((s, p) => s + p.menge * p.einzelpreis_netto, 0);
 }
@@ -121,9 +123,9 @@ export default function NeuerAuftragPage() {
       values: (ctx) => {
         void ctx; // ctx not needed here but required by signature shape
         return {
-          nettobetrag: netto,
-          mehrwertsteuerbetrag: mwst,
-          bruttobetrag: brutto,
+          nettobetrag: round2(netto),
+          mehrwertsteuerbetrag: round2(mwst),
+          bruttobetrag: round2(brutto),
         };
       },
     },
@@ -137,8 +139,8 @@ export default function NeuerAuftragPage() {
         menge: pos.menge,
         einzelpreis_netto: pos.einzelpreis_netto,
         mehrwertsteuersatz: pos.mehrwertsteuersatz,
-        positionsbetrag_netto: pos.menge * pos.einzelpreis_netto,
-        positionsbetrag_brutto: pos.menge * pos.einzelpreis_netto * (pos.mehrwertsteuersatz === 'mwst_7' ? 1.07 : 1.19),
+        positionsbetrag_netto: round2(pos.menge * pos.einzelpreis_netto),
+        positionsbetrag_brutto: round2(pos.menge * pos.einzelpreis_netto * (pos.mehrwertsteuersatz === 'mwst_7' ? 1.07 : 1.19)),
       },
     })),
   ], { draftKey: 'neuer-auftrag' });

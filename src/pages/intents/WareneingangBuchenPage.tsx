@@ -5,7 +5,7 @@
  * Writes: lagerbewegungen (N × wareneingang), lieferantenbestellungen (status → eingegangen).
  * Composes: IntentWizardShell, WizardStep, EntitySelectStep, StepNav, SummaryStep, SuccessStep.
  */
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { format } from 'date-fns';
 import { IntentWizardShell, WizardStep } from '@/components/blocks/IntentWizardShell';
 import { EntitySelectStep } from '@/components/blocks/EntitySelectStep';
@@ -88,6 +88,8 @@ export default function WareneingangBuchenPage() {
   const [positions, setPositions] = useState<PositionEntry[]>([]);
   const [positionsReady, setPositionsReady] = useState(false);
   const [positionsError, setPositionsError] = useState<string | null>(null);
+  // Summe bereits eingegangener Mengen pro Artikel (aus früheren Wareneingängen)
+  const [prevMengenMap, setPrevMengenMap] = useState<Map<string, number>>(new Map());
 
   // Build position entries when bestellpositionen loads and step 2 is active
   const buildPositions = useCallback(async () => {
@@ -119,6 +121,18 @@ export default function WareneingangBuchenPage() {
           };
         })
       );
+      // Bereits eingegangene Mengen laden, um Vollständigkeit prüfen zu können
+      const existingBewegungen = await servicePort.list('lagerbewegungen', {
+        filter: combineFilters(refFilter('bestellung', selectedBestellungId)),
+      });
+      const prevMap = new Map<string, number>();
+      for (const bew of existingBewegungen) {
+        const artId = fieldRef(bew, 'artikel');
+        if (artId) {
+          prevMap.set(artId, (prevMap.get(artId) ?? 0) + (fieldNumber(bew, 'menge') ?? 0));
+        }
+      }
+      setPrevMengenMap(prevMap);
       setPositions(entries);
       setPositionsReady(true);
     } catch {
@@ -152,6 +166,19 @@ export default function WareneingangBuchenPage() {
     return !isNaN(n) && n > 0 && p.artikelId;
   });
 
+  // Neuer Bestellstatus: 'eingegangen' nur wenn alle Positionen vollständig eingegangen sind
+  const newBestellungStatus = useMemo(() => {
+    if (positions.length === 0) return 'eingegangen' as const;
+    for (const pos of positions) {
+      if (!pos.artikelId) continue;
+      const prev = prevMengenMap.get(pos.artikelId) ?? 0;
+      const neuEntry = activePositions.find(ap => ap.artikelId === pos.artikelId);
+      const neuMenge = neuEntry ? (parseFloat(neuEntry.tatsaechlicheMenge) || 0) : 0;
+      if (prev + neuMenge < pos.bestellteMenge) return 'bestellt' as const;
+    }
+    return 'eingegangen' as const;
+  }, [positions, prevMengenMap, activePositions]);
+
   // Validation for step 2
   const validateStep2 = () => {
     if (!datumForm.validate(['datum'])) return false;
@@ -181,7 +208,7 @@ export default function WareneingangBuchenPage() {
       key: 'status-update',
       entity: 'lieferantenbestellungen' as const,
       updates: selectedBestellungId ?? '',
-      values: { status: 'eingegangen' },
+      values: { status: newBestellungStatus },
       verb: 'update' as const,
     },
   ];
@@ -233,6 +260,7 @@ export default function WareneingangBuchenPage() {
     setPositions([]);
     setPositionsReady(false);
     setLastLoadedId(null);
+    setPrevMengenMap(new Map());
     setStep(1);
   };
 
@@ -264,6 +292,7 @@ export default function WareneingangBuchenPage() {
             setPositions([]);
             setPositionsReady(false);
             setLastLoadedId(null);
+            setPrevMengenMap(new Map());
           }}
         />
         {selectedBestellungId && (
@@ -393,7 +422,7 @@ export default function WareneingangBuchenPage() {
               forms={[datumForm]}
               submit={submit}
               items={summaryItems}
-              whatHappensNext={tx('Für jede Position wird eine Lagerbewegung (Wareneingang) angelegt und die Bestellung auf "Eingegangen" gesetzt.')}
+              whatHappensNext={tx('Für jede Position wird eine Lagerbewegung (Wareneingang) angelegt. Die Bestellung wird auf „Eingegangen" gesetzt, sobald alle Mengen vollständig eingegangen sind — andernfalls bleibt sie auf „Bestellt".')}
             />
           </div>
         ) : null}
@@ -410,7 +439,7 @@ export default function WareneingangBuchenPage() {
             { label: tx('Eingangsdatum'), value: eingangsdatum ? format(new Date(eingangsdatum + 'T00:00:00'), 'dd.MM.yyyy') : '—' },
             { label: tx('Gebuchte Positionen'), value: String(activePositions.length) },
           ]}
-          whatHappensNext={tx('Die Lagerbewegungen sind gespeichert und der Lagerbestand wurde aktualisiert.')}
+          whatHappensNext={tx('Die Bewegungen sind gebucht — der Lagerbestand wird in Kürze nachgeführt.')}
           next={[
             { label: tx('Weiteren Wareneingang buchen'), onClick: handleRestart },
             { label: tx('Zum Dashboard'), href: '#/' },

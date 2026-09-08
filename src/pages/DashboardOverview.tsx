@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import type { DashboardData } from '@/hooks/useDashboardData';
 import { useEntityCrud } from '@/components/EntityCrud';
 import { tx, appLabel } from '@/i18n';
@@ -135,6 +135,14 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
   // Filter state für KPIs
   const [kpiFilter, setKpiFilter] = useState<'offen' | 'ueberfaellig' | null>(null);
 
+  // Verzögertes Nachladen: nach jedem eigenen Schreibvorgang ~15 s später fetchAll,
+  // damit Hintergrund-Regeln des Servers sichtbar werden.
+  const delayedRefetchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function scheduleDelayedRefetch() {
+    if (delayedRefetchRef.current) clearTimeout(delayedRefetchRef.current);
+    delayedRefetchRef.current = setTimeout(() => { fetchAll(); }, 15_000);
+  }
+
   // --- Actions ---
 
   const advanceAuftrag = async (auftrag: EnrichedAuftraege, nextStatus: string) => {
@@ -145,6 +153,7 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
         : a,
     );
     setAuftraege(optimistic);
+    scheduleDelayedRefetch();
     const label = auftrag.fields.auftragsnummer ?? auftrag.kundeName;
     undoToast(tx`${label} — Status aktualisiert`, async () => {
       const revert = auftraege.map(a =>
@@ -174,6 +183,7 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
         : r,
     );
     setRechnungen(optimistic);
+    scheduleDelayedRefetch();
     const label = rechnung.fields.rechnungsnummer ?? rechnung.auftragName;
     undoToast(tx`${label} — als bezahlt markiert`, async () => {
       const revert = rechnungen.map(r =>
@@ -257,6 +267,7 @@ export default function DashboardOverview({ data }: { data: DashboardData }) {
           : a,
       ),
     );
+    scheduleDelayedRefetch();
     const label = auftrag.fields.auftragsnummer ?? '';
     undoToast(tx`${label} — Status geändert`, async () => {
       setAuftraege(prev2 =>
