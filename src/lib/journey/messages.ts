@@ -47,6 +47,16 @@ export type MessageFieldKey<E extends EntityKey> = E extends keyof MessageFields
 
 export const REQUIRED_MESSAGES: { [E in EntityKey]?: Partial<Record<MessageFieldKey<E>, string>> } = {
   // <custom:messages>
+  lieferanten: { firmenname: "Bitte den Firmennamen eingeben." },
+  kunden: { firmenname: "Bitte den Firmennamen eingeben." },
+  artikel: { artikelnummer: "Bitte eine Artikelnummer eingeben.", bezeichnung: "Bitte die Artikelbezeichnung eingeben.", mehrwertsteuersatz: "Bitte den Mehrwertsteuersatz wählen." },
+  auftraege: { auftragsnummer: "Bitte eine Auftragsnummer eingeben.", auftragsdatum: "Bitte das Auftragsdatum wählen.", kunde: "Bitte einen Kunden auswählen.", status: "Bitte einen Status wählen." },
+  auftragspositionen: { auftrag: "Bitte einen Auftrag auswählen.", artikel: "Bitte einen Artikel auswählen.", menge: "Bitte die Menge eingeben." },
+  lieferantenbestellungen: { bestellnummer: "Bitte eine Bestellnummer eingeben.", bestelldatum: "Bitte das Bestelldatum wählen.", lieferant: "Bitte einen Lieferanten auswählen.", status: "Bitte einen Status wählen." },
+  bestellpositionen: { bestellung: "Bitte eine Bestellung auswählen.", artikel: "Bitte einen Artikel auswählen.", menge: "Bitte die Menge eingeben." },
+  lagerbewegungen: { bewegungstyp: "Bitte die Art der Bewegung wählen.", artikel: "Bitte einen Artikel auswählen.", menge: "Bitte die Menge eingeben.", datum: "Bitte das Datum der Bewegung wählen." },
+  rechnungen: { rechnungsnummer: "Bitte eine Rechnungsnummer eingeben.", rechnungsdatum: "Bitte das Rechnungsdatum wählen.", faelligkeitsdatum: "Bitte das Fälligkeitsdatum wählen.", auftrag: "Bitte einen Auftrag auswählen.", status: "Bitte einen Status wählen." },
+  zahlungseingaenge: { rechnung: "Bitte eine Rechnung auswählen.", zahlungsbetrag: "Bitte den Zahlungsbetrag eingeben.", zahlungsdatum: "Bitte das Zahlungsdatum wählen." },
   // </custom:messages>
 };
 
