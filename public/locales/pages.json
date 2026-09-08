@@ -1,0 +1,37 @@
+{
+  "pages": {
+    "en": {
+      "Abrechnen": "Invoice",
+      "Alle Aufträge und Bestände im grünen Bereich.": "All orders and stock levels are in the green.",
+      "Als bezahlt markieren": "Mark as Paid",
+      "Als geliefert markieren": "Mark as Delivered",
+      "Artikel unter Mindestbestand": "Items Below Minimum Stock",
+      "Brutto": "Gross",
+      "Ersten Auftrag anlegen": "Create First Order",
+      "Freigeben": "Release",
+      "Freigegeben": "Released",
+      "Geliefert": "Delivered",
+      "Keine freigegebenen Aufträge — alle Aufträge sind auf dem neuesten Stand.": "No released orders — all orders are up to date.",
+      "Lege deinen ersten Auftrag an und manage deinen Großhandel — von der Bestellung bis zur Bezahlung.": "Create your first order and manage your wholesale business — from order to payment.",
+      "Lieferung": "Delivery",
+      "Lieferung: {0}": "Delivery: {0}",
+      "Neuer Auftrag": "New Order",
+      "Offene Aufträge": "Open Orders",
+      "Offene Forderungen": "Open Receivables",
+      "Umsatz pro Monat": "Revenue per Month",
+      "Unbekannt": "Unknown",
+      "Unter Mindestbestand": "Below Minimum Stock",
+      "Willkommen bei GastroFlow!": "Welcome to GastroFlow!",
+      "Zur Lieferung": "For Delivery",
+      "Zur Lieferung bereit": "Ready for Delivery",
+      "{0} Artikel unter Mindestbestand — Nachbestellung prüfen.": "{0} items below minimum stock — check reorder.",
+      "{0} Aufträge zur Lieferung bereit — {1}.": "{0} orders ready for delivery — {1}.",
+      "{0} — Status aktualisiert": "{0} — Status Updated",
+      "{0} — Status geändert": "{0} — Status Changed",
+      "{0} — als bezahlt markiert": "{0} — Marked as Paid",
+      "{0} — {1} überfällige Rechnungen erfordern Aufmerksamkeit.": "{0} — {1} overdue invoices require attention.",
+      "— überfällig. Fällig war": "— overdue. Was due"
+    }
+  },
+  "v": 1
+}

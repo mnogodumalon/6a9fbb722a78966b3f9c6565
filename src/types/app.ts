@@ -1,0 +1,426 @@
+import { lookupLabel } from '@/i18n';
+
+// AUTOMATICALLY GENERATED TYPES - DO NOT EDIT
+
+export type LookupValue = { key: string; label: string };
+/** A raw record URL (applookup reference). NEVER render this directly
+ *  in JSX — it is a URL, not a display value. Show the enriched `*Name`
+ *  field or resolve it via the entity map instead. Assignable to/from
+ *  string everywhere; the `& {}` keeps the alias NAME visible in tsc
+ *  error messages (a plain primitive alias gets normalized away). */
+export type RecordUrl = string & {};
+export type GeoLocation = { lat: number; long: number; info?: string };
+
+export type AttachmentType = 'file' | 'note' | 'url' | 'json';
+export interface Attachment {
+  id: string;
+  type: AttachmentType;
+  label: string | null;
+  value: string | null;
+  active: boolean;
+  createdat?: string | null;
+  updatedat?: string | null;
+}
+
+export interface AttachmentInput {
+  type: AttachmentType;
+  label?: string;
+  value: string;
+  active?: boolean;
+}
+
+export interface Lieferanten {
+  record_id: string;
+  /** The API field. */
+  created_at: string;
+  updated_at: string | null;
+  /** Alias of created_at, filled by the read helpers. The API sends
+   *  snake_case only — reading `createdat` off a raw record yields
+   *  undefined, which type-checks and then crashes at runtime. */
+  createdat: string;
+  updatedat: string | null;
+  fields: {
+    firmenname?: string;
+    ansprechpartner_vorname?: string;
+    ansprechpartner_nachname?: string;
+    strasse?: string;
+    hausnummer?: string;
+    plz?: string;
+    ort?: string;
+    email?: string;
+    telefon?: string;
+    website?: string;
+    bemerkung?: string;
+  };
+}
+
+export interface Kunden {
+  record_id: string;
+  /** The API field. */
+  created_at: string;
+  updated_at: string | null;
+  /** Alias of created_at, filled by the read helpers. The API sends
+   *  snake_case only — reading `createdat` off a raw record yields
+   *  undefined, which type-checks and then crashes at runtime. */
+  createdat: string;
+  updatedat: string | null;
+  fields: {
+    firmenname?: string;
+    ansprechpartner_vorname?: string;
+    ansprechpartner_nachname?: string;
+    strasse?: string;
+    hausnummer?: string;
+    plz?: string;
+    ort?: string;
+    email?: string;
+    telefon?: string;
+    zahlungsziel_tage?: number;
+    kreditlimit?: number;
+    bemerkung?: string;
+  };
+}
+
+export interface Artikel {
+  record_id: string;
+  /** The API field. */
+  created_at: string;
+  updated_at: string | null;
+  /** Alias of created_at, filled by the read helpers. The API sends
+   *  snake_case only — reading `createdat` off a raw record yields
+   *  undefined, which type-checks and then crashes at runtime. */
+  createdat: string;
+  updatedat: string | null;
+  fields: {
+    artikelnummer?: string;
+    bezeichnung?: string;
+    einkaufspreis?: number;
+    verkaufspreis?: number;
+    mehrwertsteuersatz?: LookupValue;
+    lagerbestand?: number;
+    mindestbestand?: number;
+    lieferant?: RecordUrl; // applookup -> URL zu 'Lieferanten' Record
+    bemerkung?: string;
+  };
+}
+
+export interface Auftraege {
+  record_id: string;
+  /** The API field. */
+  created_at: string;
+  updated_at: string | null;
+  /** Alias of created_at, filled by the read helpers. The API sends
+   *  snake_case only — reading `createdat` off a raw record yields
+   *  undefined, which type-checks and then crashes at runtime. */
+  createdat: string;
+  updatedat: string | null;
+  fields: {
+    auftragsnummer?: string;
+    auftragsdatum?: string; // Format: YYYY-MM-DD oder ISO String
+    lieferdatum?: string; // Format: YYYY-MM-DD oder ISO String
+    kunde?: RecordUrl; // applookup -> URL zu 'Kunden' Record
+    status?: LookupValue;
+    nettobetrag?: number;
+    mehrwertsteuerbetrag?: number;
+    bruttobetrag?: number;
+    bemerkung?: string;
+  };
+}
+
+export interface Auftragspositionen {
+  record_id: string;
+  /** The API field. */
+  created_at: string;
+  updated_at: string | null;
+  /** Alias of created_at, filled by the read helpers. The API sends
+   *  snake_case only — reading `createdat` off a raw record yields
+   *  undefined, which type-checks and then crashes at runtime. */
+  createdat: string;
+  updatedat: string | null;
+  fields: {
+    auftrag?: RecordUrl; // applookup -> URL zu 'Auftraege' Record
+    artikel?: RecordUrl; // applookup -> URL zu 'Artikel' Record
+    menge?: number;
+    einzelpreis_netto?: number;
+    mehrwertsteuersatz?: LookupValue;
+    positionsbetrag_netto?: number;
+    positionsbetrag_brutto?: number;
+  };
+}
+
+export interface Lieferantenbestellungen {
+  record_id: string;
+  /** The API field. */
+  created_at: string;
+  updated_at: string | null;
+  /** Alias of created_at, filled by the read helpers. The API sends
+   *  snake_case only — reading `createdat` off a raw record yields
+   *  undefined, which type-checks and then crashes at runtime. */
+  createdat: string;
+  updatedat: string | null;
+  fields: {
+    bestellnummer?: string;
+    bestelldatum?: string; // Format: YYYY-MM-DD oder ISO String
+    lieferant?: RecordUrl; // applookup -> URL zu 'Lieferanten' Record
+    status?: LookupValue;
+    bemerkung?: string;
+  };
+}
+
+export interface Bestellpositionen {
+  record_id: string;
+  /** The API field. */
+  created_at: string;
+  updated_at: string | null;
+  /** Alias of created_at, filled by the read helpers. The API sends
+   *  snake_case only — reading `createdat` off a raw record yields
+   *  undefined, which type-checks and then crashes at runtime. */
+  createdat: string;
+  updatedat: string | null;
+  fields: {
+    bestellung?: RecordUrl; // applookup -> URL zu 'Lieferantenbestellungen' Record
+    artikel?: RecordUrl; // applookup -> URL zu 'Artikel' Record
+    menge?: number;
+    einkaufspreis?: number;
+  };
+}
+
+export interface Lagerbewegungen {
+  record_id: string;
+  /** The API field. */
+  created_at: string;
+  updated_at: string | null;
+  /** Alias of created_at, filled by the read helpers. The API sends
+   *  snake_case only — reading `createdat` off a raw record yields
+   *  undefined, which type-checks and then crashes at runtime. */
+  createdat: string;
+  updatedat: string | null;
+  fields: {
+    bewegungstyp?: LookupValue;
+    artikel?: RecordUrl; // applookup -> URL zu 'Artikel' Record
+    menge?: number;
+    datum?: string; // Format: YYYY-MM-DD oder ISO String
+    auftrag?: RecordUrl; // applookup -> URL zu 'Auftraege' Record
+    bestellung?: RecordUrl; // applookup -> URL zu 'Lieferantenbestellungen' Record
+    bemerkung?: string;
+  };
+}
+
+export interface Rechnungen {
+  record_id: string;
+  /** The API field. */
+  created_at: string;
+  updated_at: string | null;
+  /** Alias of created_at, filled by the read helpers. The API sends
+   *  snake_case only — reading `createdat` off a raw record yields
+   *  undefined, which type-checks and then crashes at runtime. */
+  createdat: string;
+  updatedat: string | null;
+  fields: {
+    rechnungsnummer?: string;
+    rechnungsdatum?: string; // Format: YYYY-MM-DD oder ISO String
+    faelligkeitsdatum?: string; // Format: YYYY-MM-DD oder ISO String
+    auftrag?: RecordUrl; // applookup -> URL zu 'Auftraege' Record
+    nettobetrag?: number;
+    mehrwertsteuerbetrag?: number;
+    bruttobetrag?: number;
+    status?: LookupValue;
+    bemerkung?: string;
+  };
+}
+
+export interface Zahlungseingaenge {
+  record_id: string;
+  /** The API field. */
+  created_at: string;
+  updated_at: string | null;
+  /** Alias of created_at, filled by the read helpers. The API sends
+   *  snake_case only — reading `createdat` off a raw record yields
+   *  undefined, which type-checks and then crashes at runtime. */
+  createdat: string;
+  updatedat: string | null;
+  fields: {
+    rechnung?: RecordUrl; // applookup -> URL zu 'Rechnungen' Record
+    zahlungsbetrag?: number;
+    zahlungsdatum?: string; // Format: YYYY-MM-DD oder ISO String
+    zahlungsart?: LookupValue;
+    bemerkung?: string;
+  };
+}
+
+export const APP_IDS = {
+  LIEFERANTEN: '6a9fbb2ba8626ef96ec52a21',
+  KUNDEN: '6a9fbb32f5ce91be593387f3',
+  ARTIKEL: '6a9fbb33e6aa8bab91e7f988',
+  AUFTRAEGE: '6a9fbb34cf670edf18b526bb',
+  AUFTRAGSPOSITIONEN: '6a9fbb34904f524f237678b4',
+  LIEFERANTENBESTELLUNGEN: '6a9fbb35d3e7b03833d33a24',
+  BESTELLPOSITIONEN: '6a9fbb35ab1b61c1d7f42811',
+  LAGERBEWEGUNGEN: '6a9fbb3602be2c0316936892',
+  RECHNUNGEN: '6a9fbb37b68226534021f8ba',
+  ZAHLUNGSEINGAENGE: '6a9fbb3761af529c904618ca',
+} as const;
+
+
+export const LOOKUP_OPTIONS: Record<string, Record<string, {key: string, label: string}[]>> = {
+  'artikel': {
+    mehrwertsteuersatz: [{ key: "mwst_7", get label() { return lookupLabel('artikel', 'mehrwertsteuersatz', "mwst_7") ?? "7 %"; } }, { key: "mwst_19", get label() { return lookupLabel('artikel', 'mehrwertsteuersatz', "mwst_19") ?? "19 %"; } }],
+  },
+  'auftraege': {
+    status: [{ key: "entwurf", get label() { return lookupLabel('auftraege', 'status', "entwurf") ?? "Entwurf"; } }, { key: "freigegeben", get label() { return lookupLabel('auftraege', 'status', "freigegeben") ?? "Freigegeben"; } }, { key: "geliefert", get label() { return lookupLabel('auftraege', 'status', "geliefert") ?? "Geliefert"; } }, { key: "abgerechnet", get label() { return lookupLabel('auftraege', 'status', "abgerechnet") ?? "Abgerechnet"; } }, { key: "storniert", get label() { return lookupLabel('auftraege', 'status', "storniert") ?? "Storniert"; } }],
+  },
+  'auftragspositionen': {
+    mehrwertsteuersatz: [{ key: "mwst_7", get label() { return lookupLabel('auftragspositionen', 'mehrwertsteuersatz', "mwst_7") ?? "7 %"; } }, { key: "mwst_19", get label() { return lookupLabel('auftragspositionen', 'mehrwertsteuersatz', "mwst_19") ?? "19 %"; } }],
+  },
+  'lieferantenbestellungen': {
+    status: [{ key: "offen", get label() { return lookupLabel('lieferantenbestellungen', 'status', "offen") ?? "Offen"; } }, { key: "bestellt", get label() { return lookupLabel('lieferantenbestellungen', 'status', "bestellt") ?? "Bestellt"; } }, { key: "eingegangen", get label() { return lookupLabel('lieferantenbestellungen', 'status', "eingegangen") ?? "Eingegangen"; } }],
+  },
+  'lagerbewegungen': {
+    bewegungstyp: [{ key: "wareneingang", get label() { return lookupLabel('lagerbewegungen', 'bewegungstyp', "wareneingang") ?? "Wareneingang"; } }, { key: "warenausgang", get label() { return lookupLabel('lagerbewegungen', 'bewegungstyp', "warenausgang") ?? "Warenausgang"; } }, { key: "korrektur", get label() { return lookupLabel('lagerbewegungen', 'bewegungstyp', "korrektur") ?? "Korrektur"; } }],
+  },
+  'rechnungen': {
+    status: [{ key: "offen", get label() { return lookupLabel('rechnungen', 'status', "offen") ?? "Offen"; } }, { key: "bezahlt", get label() { return lookupLabel('rechnungen', 'status', "bezahlt") ?? "Bezahlt"; } }, { key: "ueberfaellig", get label() { return lookupLabel('rechnungen', 'status', "ueberfaellig") ?? "Überfällig"; } }],
+  },
+  'zahlungseingaenge': {
+    zahlungsart: [{ key: "lastschrift", get label() { return lookupLabel('zahlungseingaenge', 'zahlungsart', "lastschrift") ?? "Lastschrift"; } }, { key: "bar", get label() { return lookupLabel('zahlungseingaenge', 'zahlungsart', "bar") ?? "Bar"; } }, { key: "sonstige", get label() { return lookupLabel('zahlungseingaenge', 'zahlungsart', "sonstige") ?? "Sonstige"; } }, { key: "ueberweisung", get label() { return lookupLabel('zahlungseingaenge', 'zahlungsart', "ueberweisung") ?? "Überweisung"; } }],
+  },
+};
+
+// Optimistic LookupValue writes: never re-type a label — resolve the schema
+// option instead (its label is a locale-aware getter; falls back to the key).
+// WRONG: status: { key: 'offen', label: 'Offen' }   (frozen in one language)
+// RIGHT: status: lookupOption('<appKey>', 'status', 'offen')
+export function lookupOption(app: string, field: string, key: string): LookupValue {
+  return LOOKUP_OPTIONS[app]?.[field]?.find(o => o.key === key) ?? { key, label: key };
+}
+
+export const FIELD_TYPES: Record<string, Record<string, string>> = {
+  'lieferanten': {
+    'firmenname': 'string/text',
+    'ansprechpartner_vorname': 'string/text',
+    'ansprechpartner_nachname': 'string/text',
+    'strasse': 'string/text',
+    'hausnummer': 'string/text',
+    'plz': 'string/text',
+    'ort': 'string/text',
+    'email': 'string/email',
+    'telefon': 'string/tel',
+    'website': 'string/url',
+    'bemerkung': 'string/textarea',
+  },
+  'kunden': {
+    'firmenname': 'string/text',
+    'ansprechpartner_vorname': 'string/text',
+    'ansprechpartner_nachname': 'string/text',
+    'strasse': 'string/text',
+    'hausnummer': 'string/text',
+    'plz': 'string/text',
+    'ort': 'string/text',
+    'email': 'string/email',
+    'telefon': 'string/tel',
+    'zahlungsziel_tage': 'number',
+    'kreditlimit': 'number',
+    'bemerkung': 'string/textarea',
+  },
+  'artikel': {
+    'artikelnummer': 'string/text',
+    'bezeichnung': 'string/text',
+    'einkaufspreis': 'number',
+    'verkaufspreis': 'number',
+    'mehrwertsteuersatz': 'lookup/radio',
+    'lagerbestand': 'number',
+    'mindestbestand': 'number',
+    'lieferant': 'applookup/select',
+    'bemerkung': 'string/textarea',
+  },
+  'auftraege': {
+    'auftragsnummer': 'string/text',
+    'auftragsdatum': 'date/date',
+    'lieferdatum': 'date/date',
+    'kunde': 'applookup/select',
+    'status': 'lookup/select',
+    'nettobetrag': 'number',
+    'mehrwertsteuerbetrag': 'number',
+    'bruttobetrag': 'number',
+    'bemerkung': 'string/textarea',
+  },
+  'auftragspositionen': {
+    'auftrag': 'applookup/select',
+    'artikel': 'applookup/select',
+    'menge': 'number',
+    'einzelpreis_netto': 'number',
+    'mehrwertsteuersatz': 'lookup/radio',
+    'positionsbetrag_netto': 'number',
+    'positionsbetrag_brutto': 'number',
+  },
+  'lieferantenbestellungen': {
+    'bestellnummer': 'string/text',
+    'bestelldatum': 'date/date',
+    'lieferant': 'applookup/select',
+    'status': 'lookup/radio',
+    'bemerkung': 'string/textarea',
+  },
+  'bestellpositionen': {
+    'bestellung': 'applookup/select',
+    'artikel': 'applookup/select',
+    'menge': 'number',
+    'einkaufspreis': 'number',
+  },
+  'lagerbewegungen': {
+    'bewegungstyp': 'lookup/radio',
+    'artikel': 'applookup/select',
+    'menge': 'number',
+    'datum': 'date/date',
+    'auftrag': 'applookup/select',
+    'bestellung': 'applookup/select',
+    'bemerkung': 'string/textarea',
+  },
+  'rechnungen': {
+    'rechnungsnummer': 'string/text',
+    'rechnungsdatum': 'date/date',
+    'faelligkeitsdatum': 'date/date',
+    'auftrag': 'applookup/select',
+    'nettobetrag': 'number',
+    'mehrwertsteuerbetrag': 'number',
+    'bruttobetrag': 'number',
+    'status': 'lookup/radio',
+    'bemerkung': 'string/textarea',
+  },
+  'zahlungseingaenge': {
+    'rechnung': 'applookup/select',
+    'zahlungsbetrag': 'number',
+    'zahlungsdatum': 'date/date',
+    'zahlungsart': 'lookup/select',
+    'bemerkung': 'string/textarea',
+  },
+};
+
+export const HUB_TOPOLOGY: Record<string, { field: string; entity: string }[]> = {
+  'artikel': [
+    { field: 'artikel', entity: 'auftragspositionen' },
+    { field: 'artikel', entity: 'bestellpositionen' },
+    { field: 'artikel', entity: 'lagerbewegungen' },
+  ],
+  'auftraege': [
+    { field: 'auftrag', entity: 'auftragspositionen' },
+    { field: 'auftrag', entity: 'lagerbewegungen' },
+    { field: 'auftrag', entity: 'rechnungen' },
+  ],
+};
+
+type StripLookup<T> = {
+  [K in keyof T]: T[K] extends LookupValue | undefined ? string | LookupValue | undefined
+    : T[K] extends LookupValue[] | undefined ? string[] | LookupValue[] | undefined
+    : T[K];
+};
+
+// Helper Types for creating new records (lookup fields as plain strings for API)
+export type CreateLieferanten = StripLookup<Lieferanten['fields']>;
+export type CreateKunden = StripLookup<Kunden['fields']>;
+export type CreateArtikel = StripLookup<Artikel['fields']>;
+export type CreateAuftraege = StripLookup<Auftraege['fields']>;
+export type CreateAuftragspositionen = StripLookup<Auftragspositionen['fields']>;
+export type CreateLieferantenbestellungen = StripLookup<Lieferantenbestellungen['fields']>;
+export type CreateBestellpositionen = StripLookup<Bestellpositionen['fields']>;
+export type CreateLagerbewegungen = StripLookup<Lagerbewegungen['fields']>;
+export type CreateRechnungen = StripLookup<Rechnungen['fields']>;
+export type CreateZahlungseingaenge = StripLookup<Zahlungseingaenge['fields']>;

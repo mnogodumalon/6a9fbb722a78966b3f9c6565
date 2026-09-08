@@ -1,0 +1,99 @@
+{
+  "LieferantenDialog.tsx": {
+    "firmenname": "z. B. Schmidt Großhandel",
+    "ansprechpartner_vorname": "z. B. Hans",
+    "ansprechpartner_nachname": "z. B. Mueller",
+    "strasse": "z. B. Hauptstraße",
+    "hausnummer": "z. B. 42",
+    "plz": "z. B. 10115",
+    "ort": "z. B. Berlin",
+    "email": "z. B. info@schmidt-gros.de",
+    "website": "z. B. www.schmidt-gros.de",
+    "bemerkung": "Besonderheiten, Lieferbedingungen, Öffnungszeiten..."
+  },
+  "KundenDialog.tsx": {
+    "firmenname": "z. B. Pizzeria Roma",
+    "ansprechpartner_vorname": "z. B. Marco",
+    "ansprechpartner_nachname": "z. B. Rossi",
+    "strasse": "z. B. Kurfürstendamm",
+    "hausnummer": "z. B. 123",
+    "plz": "z. B. 10711",
+    "ort": "z. B. Berlin",
+    "email": "z. B. marco@pizzeria-roma.de",
+    "telefon": "z. B. 030 123456",
+    "zahlungsziel_tage": "z. B. 14",
+    "kreditlimit": "z. B. 5000",
+    "bemerkung": "Besonderheiten, bevorzugte Kontaktzeiten..."
+  },
+  "ArtikelDialog.tsx": {
+    "artikelnummer": "z. B. ART-2026-001",
+    "bezeichnung": "z. B. Mozarella 500g",
+    "einkaufspreis": "z. B. 2,50",
+    "verkaufspreis": "z. B. 4,99",
+    "mehrwertsteuersatz": "Wähle den Steuersatz",
+    "lagerbestand": "z. B. 45",
+    "mindestbestand": "z. B. 10",
+    "lieferant": "Aus der Liste wählen",
+    "bemerkung": "Lagerkennzeichen, Lagerort, besondere Hinweise..."
+  },
+  "AuftraegeDialog.tsx": {
+    "auftragsnummer": "z. B. AU-2026-001",
+    "auftragsdatum": "Wann wurde der Auftrag erteilt?",
+    "lieferdatum": "Gewünschtes Lieferdatum",
+    "kunde": "Aus der Liste wählen",
+    "status": "Wähle einen Status",
+    "nettobetrag": "z. B. 250,00",
+    "mehrwertsteuerbetrag": "z. B. 47,50",
+    "bruttobetrag": "z. B. 297,50",
+    "bemerkung": "Bearbeitungsnotizen, Besonderheiten..."
+  },
+  "AuftragspositionenDialog.tsx": {
+    "auftrag": "Aus der Auftragsliste wählen",
+    "artikel": "Aus der Artikelliste wählen",
+    "menge": "z. B. 5",
+    "einzelpreis_netto": "z. B. 2,50",
+    "mehrwertsteuersatz": "Wähle den Steuersatz",
+    "positionsbetrag_netto": "z. B. 12,50",
+    "positionsbetrag_brutto": "z. B. 14,87"
+  },
+  "LieferantenbestellungenDialog.tsx": {
+    "bestellnummer": "z. B. LB-2026-001",
+    "bestelldatum": "Wann wurde bestellt?",
+    "lieferant": "Aus der Liste wählen",
+    "status": "Wähle einen Status",
+    "bemerkung": "Besondeheiten dieser Bestellung..."
+  },
+  "BestellpositionenDialog.tsx": {
+    "bestellung": "Aus der Bestellungsliste wählen",
+    "artikel": "Aus der Artikelliste wählen",
+    "menge": "z. B. 10",
+    "einkaufspreis": "z. B. 1,80"
+  },
+  "LagerbewegungenDialog.tsx": {
+    "bewegungstyp": "Warenein-, Ausgang oder Korrektur?",
+    "artikel": "Aus der Artikelliste wählen",
+    "menge": "z. B. 5",
+    "datum": "Bewegungsdatum",
+    "auftrag": "Falls zugehörig wählen",
+    "bestellung": "Falls zugehörig wählen",
+    "bemerkung": "Grund, Notizen..."
+  },
+  "RechnungenDialog.tsx": {
+    "rechnungsnummer": "z. B. RN-2026-001",
+    "rechnungsdatum": "Wann ist die Rechnung ausgestellt?",
+    "faelligkeitsdatum": "Wann ist die Zahlung fällig?",
+    "auftrag": "Aus der Auftragsliste wählen",
+    "nettobetrag": "z. B. 500,00",
+    "mehrwertsteuerbetrag": "z. B. 95,00",
+    "bruttobetrag": "z. B. 595,00",
+    "status": "Wähle einen Status",
+    "bemerkung": "Zahlungsbedingungen, Notizen..."
+  },
+  "ZahlungseingaengeDialog.tsx": {
+    "rechnung": "Aus der Rechnungsliste wählen",
+    "zahlungsbetrag": "z. B. 595,00",
+    "zahlungsdatum": "Wann wurde gezahlt?",
+    "zahlungsart": "Wähle eine Zahlungsart",
+    "bemerkung": "z. B. Referenz, Notizen..."
+  }
+}

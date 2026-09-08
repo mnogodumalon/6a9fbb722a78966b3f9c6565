@@ -1,0 +1,64 @@
+{
+  "entities": {
+    "Lieferanten": {
+      "placeholders_set": 10,
+      "defaults_keys": [],
+      "computed_keys": [],
+      "reason": "Reine Stammdatenverwaltung — nur Kontaktdaten, Adresse, Email, Website, Notizen; keine berechenbaren Felder"
+    },
+    "Kunden": {
+      "placeholders_set": 12,
+      "defaults_keys": [],
+      "computed_keys": [],
+      "reason": "Stammdaten mit Zahlungsziel/Kreditlimit — Geschäftsparameter, nicht berechenbar"
+    },
+    "Artikel": {
+      "placeholders_set": 8,
+      "defaults_keys": [],
+      "computed_keys": [],
+      "reason": "Stammartikel mit Preisen und Bestandswerten — Kein computed notwendig (Bestand wird über Lagerbewegungen verändert)"
+    },
+    "Aufträge": {
+      "placeholders_set": 9,
+      "defaults_keys": ["auftragsdatum", "status"],
+      "computed_keys": ["mehrwertsteuerbetrag", "bruttobetrag"],
+      "reason": "Netto-Brutto-Rechnung: Netto × 0.19 = MwSt, Netto + MwSt = Brutto"
+    },
+    "Auftragspositionen": {
+      "placeholders_set": 7,
+      "defaults_keys": ["menge"],
+      "computed_keys": ["positionsbetrag_netto", "positionsbetrag_brutto"],
+      "reason": "Menge × Einzelpreis netto = Positionsbetrag netto; mit MwSt-Satz dann brutto (MODUS 2)"
+    },
+    "Lieferantenbestellungen": {
+      "placeholders_set": 5,
+      "defaults_keys": ["bestelldatum", "status"],
+      "computed_keys": [],
+      "reason": "Kopfzeile einer Bestellung — Datum und initialer Status, keine Berechnung"
+    },
+    "Bestellpositionen": {
+      "placeholders_set": 4,
+      "defaults_keys": ["menge"],
+      "computed_keys": ["_bestellpositionsbetrag"],
+      "reason": "Menge × Einkaufspreis = virtueller Positionsbetrag (Berechnungs-Anzeige)"
+    },
+    "Lagerbewegungen": {
+      "placeholders_set": 7,
+      "defaults_keys": ["datum"],
+      "computed_keys": [],
+      "reason": "Reine Kontrollstruktur — Menge kann negativ sein (Korrekturen), numberFields gesetzt"
+    },
+    "Rechnungen": {
+      "placeholders_set": 9,
+      "defaults_keys": ["rechnungsdatum", "faelligkeitsdatum", "status"],
+      "computed_keys": ["mehrwertsteuerbetrag", "bruttobetrag"],
+      "reason": "Klassische Rechnungsaggregate: Netto × 0.19 = MwSt, Netto + MwSt = Brutto; Zahlungsziel default 14 Tage"
+    },
+    "Zahlungseingänge": {
+      "placeholders_set": 5,
+      "defaults_keys": ["zahlungsdatum"],
+      "computed_keys": [],
+      "reason": "Buchung eines Zahlungseingangs — Datum=heute, keine Berechnung notwendig"
+    }
+  }
+}

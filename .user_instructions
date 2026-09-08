@@ -1,0 +1,13 @@
+Wir sind ein kleiner Großhandel für Gastronomiebedarf mit etwa 300 Artikeln und rund 80 Kunden. Bisher läuft alles über Excel und wird unübersichtlich. Ich brauche ein System, mit dem wir den Alltag vom Auftrag bis zur Bezahlung abbilden.
+
+Was wir verwalten müssen:
+- Kunden mit Adresse, Ansprechpartner, E-Mail, Zahlungsziel in Tagen und Kreditlimit
+- Lieferanten mit Kontaktdaten
+- Artikel mit Artikelnummer, Bezeichnung, Einkaufspreis, Verkaufspreis, Mehrwertsteuersatz (7 oder 19 %), aktuellem Lagerbestand, Mindestbestand und dem Lieferanten, bei dem wir nachbestellen
+- Aufträge von Kunden mit Auftragsdatum, Lieferdatum und Status (Entwurf, Freigegeben, Geliefert, Abgerechnet, Storniert). Ein Auftrag hat mehrere Positionen, jede Position hat Artikel, Menge und Einzelpreis. Der Auftrag soll Netto, Mehrwertsteuer und Brutto ausweisen.
+- Bestellungen bei Lieferanten mit Positionen und Status (Offen, Bestellt, Eingegangen)
+- Lagerbewegungen: Wareneingang, Warenausgang und Korrekturen, jeweils mit Artikel, Menge, Datum und Bezug zum Auftrag oder zur Bestellung
+- Rechnungen zu Aufträgen mit fortlaufender Rechnungsnummer, Rechnungsdatum, Fälligkeitsdatum, Betrag und Status (Offen, Bezahlt, Überfällig)
+- Zahlungseingänge mit Rechnung, Betrag und Datum
+
+Im Dashboard möchte ich auf einen Blick sehen: offene Aufträge nach Status, Umsatz pro Monat, Artikel unter Mindestbestand, offene und überfällige Rechnungen mit Summe. Wichtig ist ein geführter Ablauf, um einen neuen Auftrag mit mehreren Positionen anzulegen, und einer, um einen Wareneingang zu einer Bestellung zu buchen. Wenn ein Auftrag geliefert ist, soll der Lagerbestand entsprechend sinken.
